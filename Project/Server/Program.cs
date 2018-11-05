@@ -10,14 +10,14 @@ namespace Server
 {
     class Program
     {
-       // private static ServiceHost svc;
+      
 
         static void Main(string[] args)
         {
             ServiceHost svc = new ServiceHost(typeof(DataBaseManagement));
             svc.AddServiceEndpoint(typeof(IDatabaseManagement), new NetTcpBinding(), new Uri("net.tcp://localhost:4001/IDataBaseManagement"));
 
-            // Host();
+           
             svc.Open();
            
             Console.WriteLine("Server je otvoren.");
@@ -25,10 +25,6 @@ namespace Server
             svc.Close();
         }
 
-        //static void Host()
-        //{
-        //    svc = new ServiceHost(typeof(DataBaseManagement));
-        //    svc.Open();
-        //}
+        
     }
 }

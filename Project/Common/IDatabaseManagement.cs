@@ -16,7 +16,7 @@ namespace Common
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void SaveConsumation(string fileName);
+        void ArchiveConsumation(string fileName);
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
@@ -24,17 +24,20 @@ namespace Common
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void AddConsumer(Consumer c);
+        void AddConsumer(Consumer c, string fileName);
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
         void ModificationConsumer(string ID, string region, double consamption, string year, string city);
 
         [OperationContract]
-        double ReadConsumation(string fileName, string city, string region); 
-        
-    
+        double CityConsumtion(string fileName, string city);
 
+        [OperationContract]
+        double RegionConsumtion(string fileName, string region);
+
+        [OperationContract]
+        double MaxRegionConsumation(string fileName, string region);
 
 
 

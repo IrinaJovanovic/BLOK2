@@ -19,17 +19,52 @@ namespace Client
             //Connect();
             Consumer c1 = new Consumer();
             Consumer c2 = new Consumer("2345", "Backi", "Zrenjanin", "2013", 245);
-            Consumer c3 = new Consumer("3456", "Pomoravski", "Kragujevac", "2017", 5678);
+            Consumer c3 = new Consumer("3456", "Backi", "Zrenjanin", "2017", 5678);
             Consumer c4 = new Consumer("4567", "Macvanski", "Sabac", "2019", 3333);
+            Consumer c5 = new Consumer("3458", "Backi", "Zrenjanin", "2017", 9888);
 
             string fileName = @"..\..\..\" + "NoviFajl";
 
             try
             {
-                proxy.AddConsumer(c1);
-                proxy.AddConsumer(c2);
-                proxy.AddConsumer(c3);
-                proxy.AddConsumer(c4);
+                proxy.CreateFile(fileName);
+                Console.WriteLine("NAPRAVLJEN FILE");
+            }
+            catch (FaultException<MyException> ex)
+            {
+                Console.WriteLine(ex.Detail.Reason);
+            }
+
+
+            try
+            {
+                proxy.AddConsumer(c1,fileName);
+                proxy.AddConsumer(c2,fileName);
+                proxy.AddConsumer(c3,fileName);
+                proxy.AddConsumer(c4,fileName);
+                proxy.AddConsumer(c5,fileName);
+            }
+            catch (FaultException<MyException> ex)
+            {
+                Console.WriteLine(ex.Detail.Reason);
+            }
+
+            
+            try
+            {
+                //double srednjaVrednost = proxy.CityConsumtion(fileName, "NoviSad");
+                //Console.WriteLine("Srednja vrednost je:{0}", srednjaVrednost);
+                Console.WriteLine("Srednja vrednost je:{0}", proxy.CityConsumtion(fileName, "Zrenjanin"));
+               
+            }
+            catch (FaultException<MyException> ex)
+            {
+                Console.WriteLine(ex.Detail.Reason);
+            }
+            try
+            {
+                Console.WriteLine("Srednja vrednost je:{0}", proxy.RegionConsumtion(fileName, "Backi"));
+
             }
             catch (FaultException<MyException> ex)
             {
@@ -38,16 +73,18 @@ namespace Client
 
             try
             {
-                proxy.CreateFile(fileName);
+               
+                Console.WriteLine("Maksimalna vrednost je:{0}", proxy.MaxRegionConsumation(fileName, "Backi"));
+
             }
             catch (FaultException<MyException> ex)
             {
                 Console.WriteLine(ex.Detail.Reason);
             }
-
             try
             {
                 proxy.ModificationConsumer("1111", "Vojvodina", 123.2, "2006", "Beograd"); //test za exception - ne treba da radi
+                Console.WriteLine("MODIFIKOVAN CONSUMER");
             }
             catch (FaultException<MyException> ex)
             {
@@ -57,6 +94,7 @@ namespace Client
             try
             {
                 proxy.ModificationConsumer("1234", "Vojvodina", 123.2, "2006", "Beograd"); //test za exception - treba da radi
+                Console.WriteLine("MODIFIKOVAN CONSUMER");
             }
             catch (FaultException<MyException> ex)
             {
@@ -65,21 +103,23 @@ namespace Client
 
             try
             {
-                proxy.SaveConsumation(fileName);
+                proxy.ArchiveConsumation(fileName);
             }
             catch (FaultException<MyException> ex)
             {
                 Console.WriteLine(ex.Detail.Reason);
             }
 
-            try
-            {
-                proxy.RemoveConsumation(fileName);
-            }
-            catch (FaultException<MyException> ex)
-            {
-                Console.WriteLine(ex.Detail.Reason);
-            }
+
+
+            //try
+            //{
+            //    proxy.RemoveConsumation(fileName);
+            //}
+            //catch (FaultException<MyException> ex)
+            //{
+            //    Console.WriteLine(ex.Detail.Reason);
+            //}
 
             Console.ReadLine();
 

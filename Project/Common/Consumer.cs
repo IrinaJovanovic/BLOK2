@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace Common
 {
     [DataContract]
+
     public class Consumer
     {
         string conumerID;
@@ -15,12 +16,14 @@ namespace Common
         string city;
         string year;
         double consumation;
+        //koji je tip
+       public static int counter=0;
 
         public Consumer()
         {
             this.conumerID = "1234";
             this.region = "Vojvodina";
-            this.city = "Novi Sad";
+            this.city = "NoviSad";
             this.year = "2018";
             this.consumation = 123.11;
         }
