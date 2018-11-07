@@ -28,7 +28,7 @@ namespace Common
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void ModificationConsumer(string ID, string region, double consamption, string year, string city);
+        void ModificationConsumer(string ID, string region, double consamption, string year, string city, string fileName);
 
         [OperationContract]
         double CityConsumtion(string fileName, string city);
@@ -38,6 +38,7 @@ namespace Common
 
         [OperationContract]
         double MaxRegionConsumation(string fileName, string region);
+       
 
 
 

@@ -36,21 +36,24 @@ namespace Client
             }
 
 
-            try
-            {
+            //try
+            //{
                 proxy.AddConsumer(c1,fileName);
                 proxy.AddConsumer(c2,fileName);
+                proxy.AddConsumer(c2, fileName);
                 proxy.AddConsumer(c3,fileName);
                 proxy.AddConsumer(c4,fileName);
                 proxy.AddConsumer(c5,fileName);
-            }
-            catch (FaultException<MyException> ex)
-            {
-                Console.WriteLine(ex.Detail.Reason);
-            }
+            proxy.ModificationConsumer("2345", "Macvanski", 1324, "2010", "Novi", fileName);
+            Console.WriteLine("Modifikacija");
+            //}
+            //catch (FaultException<MyException> ex)
+            //{
+            //    Console.WriteLine(ex.Detail.Reason);
+            //}
 
             
-            try
+           /* try
             {
                 //double srednjaVrednost = proxy.CityConsumtion(fileName, "NoviSad");
                 //Console.WriteLine("Srednja vrednost je:{0}", srednjaVrednost);
@@ -120,10 +123,10 @@ namespace Client
             //{
             //    Console.WriteLine(ex.Detail.Reason);
             //}
-
+            */
             Console.ReadLine();
-
-
+            
+    
         }
     }
 }
