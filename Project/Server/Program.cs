@@ -15,7 +15,6 @@ namespace Server
         static void Main(string[] args)
         {
             ServiceHost svc = new ServiceHost(typeof(DataBaseManagement));
-            svc.AddServiceEndpoint(typeof(IDatabaseManagement), new NetTcpBinding(), new Uri("net.tcp://localhost:4001/IDataBaseManagement"));
 
            
             svc.Open();

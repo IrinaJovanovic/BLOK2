@@ -38,6 +38,12 @@ namespace Common
 
         [OperationContract]
         double MaxRegionConsumation(string fileName, string region);
+
+        [OperationContract]
+        Dictionary<string, Consumer> UzmiSve(); //PROMENI IME 
+
+        [OperationContract]
+        void AddAll(Dictionary<string, Consumer> data);
        
 
 

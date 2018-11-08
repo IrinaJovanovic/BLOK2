@@ -13,7 +13,7 @@ namespace Client
         // private static IDatabaseManagement proxy;
         static void Main(string[] args)
         {
-            ChannelFactory<IDatabaseManagement> channel = new ChannelFactory<IDatabaseManagement>(new NetTcpBinding(), new EndpointAddress("net.tcp://localhost:4001/IDataBaseManagement"));
+            ChannelFactory<IDatabaseManagement> channel = new ChannelFactory<IDatabaseManagement>(typeof(IDatabaseManagement).ToString());
             IDatabaseManagement proxy = channel.CreateChannel();
 
             //Connect();

@@ -19,6 +19,9 @@ namespace Common
         //koji je tip
        public static int counter=0;
 
+       [DataMember]
+       DateTime timeStamp;
+
         public Consumer()
         {
             this.conumerID = "1234";
@@ -26,6 +29,7 @@ namespace Common
             this.city = "NoviSad";
             this.year = "2018";
             this.consumation = 123.11;
+            TimeStamp = DateTime.Now;
         }
 
         public Consumer(string conumerID, string region, string city, string year, double consumation)
@@ -35,6 +39,7 @@ namespace Common
             this.city = city;
             this.year = year;
             this.consumation = consumation;
+            TimeStamp = DateTime.Now;
         }
         
         [DataMember]
@@ -47,5 +52,6 @@ namespace Common
         public string Year { get => year; set => year = value; }
         [DataMember]
         public double Consumation { get => consumation; set => consumation = value; }
+        public DateTime TimeStamp { get => timeStamp; set => timeStamp = value; }
     }
 }

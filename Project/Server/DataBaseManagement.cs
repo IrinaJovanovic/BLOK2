@@ -16,14 +16,11 @@ namespace Server
     public class DataBaseManagement : IDatabaseManagement
     {
 
-        
-
-
         public void AddConsumer(Consumer consumer, string fileName)//metoda za writera
         {
             IPrincipal principal = Thread.CurrentPrincipal;
 
-            if (principal.IsInRole("Writer"))
+          //  if (principal.IsInRole("Writer"))
             {
 
                 if (!DataBase.consumers.ContainsKey(consumer.ConumerID))
@@ -58,7 +55,7 @@ namespace Server
             int count = 0;
             IPrincipal principal = Thread.CurrentPrincipal;
 
-            if (principal.IsInRole("Reader"))
+          //  if (principal.IsInRole("Reader"))
             {
                 if (!File.Exists(fileName))
                 {
@@ -94,14 +91,14 @@ namespace Server
                 }
                 Console.WriteLine("Srednja vrednost za grad " + city + " je {0}", Math.Round((avg / count), 2));
             }
-                return Math.Round(avg / count, 2);
-            
+            return Math.Round(avg / count, 2);
+
         }
 
         public void CreateFile(string fileName) //ovde treba samo da se kreira fajl, jer ce to raditi admin, a pravo upisa ima samo writter i to se morati u posebnoj metodi 
         {
             IPrincipal principal = Thread.CurrentPrincipal;
-            if (principal.IsInRole("Admin"))
+            ///if (principal.IsInRole("Admin"))
             {
                 if (!File.Exists(fileName))
                 {
@@ -126,7 +123,7 @@ namespace Server
             double max = 0;   //!
 
             IPrincipal principal = Thread.CurrentPrincipal;
-            if (principal.IsInRole("Reader"))
+         //   if (principal.IsInRole("Reader"))
             {
 
                 if (!File.Exists(fileName))
@@ -165,7 +162,7 @@ namespace Server
                 }
                 Console.WriteLine("Maksimalna vrednost za " + region + " region je {0}", max);
             }
-                return max;
+            return max;
         }
 
 
@@ -173,7 +170,7 @@ namespace Server
         public void ModificationConsumer(string ID, string region, double consamption, string year, string city, string fileName)//treba da se doda u fajl modifikovani potrosac
         {
             IPrincipal principal = Thread.CurrentPrincipal;
-            if (principal.IsInRole("Writer"))
+           // if (principal.IsInRole("Writer"))
             {
                 if (DataBase.consumers.ContainsKey(ID))
                 {
@@ -232,7 +229,6 @@ namespace Server
                 }
             }
 
-
         }
 
 
@@ -242,7 +238,7 @@ namespace Server
             double avgTemp = 0;
             int count = 0;
             IPrincipal principal = Thread.CurrentPrincipal;
-            if (principal.IsInRole("Reader"))
+           // if (principal.IsInRole("Reader"))
             {
                 if (!File.Exists(fileName))
                 {
@@ -273,21 +269,19 @@ namespace Server
                             }
                         }
 
-
                     }
 
                 }
                 Console.WriteLine("Srednja vrednost za " + region + " region je {0}", Math.Round((avg / count), 2));
             }
-                return Math.Round((avg / count), 2);
+            return Math.Round((avg / count), 2);
         }
-
 
 
         public void RemoveConsumation(string fileName) //admin-pravo uklanjanja baze podataka (fajl-a)
         {
             IPrincipal principal = Thread.CurrentPrincipal;
-            if (principal.IsInRole("Admin"))
+           // if (principal.IsInRole("Admin"))
             {
                 if (File.Exists(fileName))
                 {
@@ -312,7 +306,7 @@ namespace Server
 
             string name;
             IPrincipal principal = Thread.CurrentPrincipal;
-            if (principal.IsInRole("Admin"))
+           // if (principal.IsInRole("Admin"))
             {
                 if (!File.Exists(fileName))
                 {
@@ -330,6 +324,50 @@ namespace Server
 
         }
 
-       
+        public Dictionary<string, Consumer> UzmiSve()
+        {
+            //throw new NotImplementedException();
+            return DataBase.consumers;
+        }
+
+        public void AddAll(Dictionary<string, Consumer> data)
+        {
+
+            bool changed = false;
+
+            foreach (Consumer c in DataBase.consumers.Values)
+            {
+                if (!data.ContainsKey(c.ConumerID))
+                {
+                    //da li je objekat mozda izbrisan 
+                    DataBase.consumers.Remove(c.ConumerID);
+                    changed = true;
+
+
+                }
+                else if (c.TimeStamp != data[c.ConumerID].TimeStamp)
+                {
+                    DataBase.consumers[c.ConumerID] = data[c.ConumerID];
+                    changed = true;
+                }
+
+            }
+            foreach (Consumer c in data.Values)
+            {
+                if (!DataBase.consumers.ContainsKey(c.ConumerID))
+                {
+                    DataBase.consumers[c.ConumerID] = c;
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                Console.WriteLine("Promenjeno u replikaciji nesto");
+            }
+
+
+
+        }
     }
 }
