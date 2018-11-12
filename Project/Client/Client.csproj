@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{78ACEE88-614F-42FB-AE4A-6B12EE3EA94F}</ProjectGuid>
+    <ProjectGuid>{D9D6B794-8E08-43CC-903C-626E6EF388EC}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Server</RootNamespace>
-    <AssemblyName>Server</AssemblyName>
+    <RootNamespace>Client</RootNamespace>
+    <AssemblyName>Client</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -44,8 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataBase.cs" />
-    <Compile Include="DataBaseManagement.cs" />
+    <Compile Include="FailOverClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -53,7 +52,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="StateService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -64,7 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{D21BAF50-F7F4-4668-AB5F-90CE2DAAB445}</Project>
+      <Project>{d21baf50-f7f4-4668-ab5f-90ce2daab445}</Project>
       <Name>Common</Name>
     </ProjectReference>
   </ItemGroup>

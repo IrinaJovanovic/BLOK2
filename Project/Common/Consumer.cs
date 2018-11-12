@@ -17,7 +17,7 @@ namespace Common
         string year;
         double consumation;
         //koji je tip
-       public static int counter=0;
+      
 
        [DataMember]
        DateTime timeStamp;
@@ -43,7 +43,7 @@ namespace Common
         }
         
         [DataMember]
-        public string ConumerID { get => conumerID; set => conumerID = value; }
+        public string ConsumerID { get => conumerID; set => conumerID = value; }
         [DataMember]
         public string Region { get => region; set => region = value; }
         [DataMember]

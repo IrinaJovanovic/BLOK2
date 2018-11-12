@@ -11,6 +11,8 @@ namespace Common
     public enum EStateServers
     {
         [EnumMemberAttribute]
+        Nedostupno,
+        [EnumMemberAttribute]
         Nepoznato,
         [EnumMemberAttribute]
         Primarni,

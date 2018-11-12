@@ -8,45 +8,41 @@ using System.Threading.Tasks;
 namespace Common
 {
     [ServiceContract]
-    public interface IDatabaseManagement
+    public interface IDataBaseManagement
     {
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void CreateFile(string fileName);
+        bool CreateFile();
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void ArchiveConsumation(string fileName);
+        void ArchiveConsumation();
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void RemoveConsumation(string fileName);
+        void RemoveConsumation();
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void AddConsumer(Consumer c, string fileName);
+        bool AddConsumer(Consumer c);
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void ModificationConsumer(string ID, string region, double consamption, string year, string city, string fileName);
+        bool ModificationConsumer(Consumer consumer);
 
         [OperationContract]
-        double CityConsumtion(string fileName, string city);
+        double CityConsumtion(string city);
 
         [OperationContract]
-        double RegionConsumtion(string fileName, string region);
+        double RegionConsumtion(string region);
 
         [OperationContract]
-        double MaxRegionConsumation(string fileName, string region);
+        double MaxRegionConsumation(string region);
 
         [OperationContract]
         Dictionary<string, Consumer> UzmiSve(); //PROMENI IME 
 
         [OperationContract]
         void AddAll(Dictionary<string, Consumer> data);
-       
-
-
-
     }
 }

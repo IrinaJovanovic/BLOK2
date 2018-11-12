@@ -12,12 +12,12 @@ namespace Common
     {
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        EStateServers ProveraStanja();
+        EStateServers StateCheck();
 
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void AzuriranjeStanja(EStateServers stanja);
+        void StateUpdate(EStateServers state);
 
 
 

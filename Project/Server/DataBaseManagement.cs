@@ -9,319 +9,259 @@ using System.Security;
 using System.ServiceModel;
 using System.Security.Principal;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace Server
 {
-
-    public class DataBaseManagement : IDatabaseManagement
+    public class DataBaseManagement : IDataBaseManagement
     {
-
-        public void AddConsumer(Consumer consumer, string fileName)//metoda za writera
+        public bool AddConsumer(Consumer consumer)
         {
             IPrincipal principal = Thread.CurrentPrincipal;
+            //if (!principal.IsInRole("Wr")){
 
-          //  if (principal.IsInRole("Writer"))
-            {
-
-                if (!DataBase.consumers.ContainsKey(consumer.ConumerID))
-                {
-                    DataBase.consumers[consumer.ConumerID] = consumer;
-                    if (!File.Exists(fileName))
-                    {
-                        MyException ex = new MyException("Error! File doesn't exists \n");
-                        throw new FaultException<MyException>(ex);
-                    }
-                    else
-                    {
-                        using (StreamWriter file = File.AppendText(fileName))
-                            /*foreach (var entry in DataBase.consumers)*/
-                            file.WriteLine("ID" + " " + consumer.ConumerID + " " + "region " + consumer.Region
-                                        + " " + "city " + consumer.City + " " + "Year " + " " + consumer.Year + " "
-                                      + " Consumption " + " " + consumer.Consumation);
-
-
-                    }
-
-                }
-            }
-
-        }
-
-
-        public double CityConsumtion(string fileName, string city)//metoda za readera
-        {
-            double avg = 0;
-            double avgTemp = 0;
-            int count = 0;
-            IPrincipal principal = Thread.CurrentPrincipal;
-
-          //  if (principal.IsInRole("Reader"))
-            {
-                if (!File.Exists(fileName))
-                {
-                    MyException ex = new MyException("Error! file not find\n");
-                    throw new FaultException<MyException>(ex);
-                }
-                else
-                {
-                    using (StreamReader sr = File.OpenText(fileName))
-                    {
-                        string s = "";
-                        char[] delimiter = { ' ', '\n' };
-
-                        while ((s = sr.ReadLine()) != null)
-                        {
-                            string[] words = s.Split(delimiter);
-                            if (Equals(city, words[5]))
-                            {
-                                if (double.TryParse(words[12], out avgTemp))
-                                {
-                                    avg += avgTemp;
-                                    count++;
-                                }
-                                else
-                                {
-                                    Console.WriteLine("String could not be parsed!\n");
-                                }
-                            }
-                        }
-
-                    }
-
-                }
-                Console.WriteLine("Srednja vrednost za grad " + city + " je {0}", Math.Round((avg / count), 2));
-            }
-            return Math.Round(avg / count, 2);
-
-        }
-
-        public void CreateFile(string fileName) //ovde treba samo da se kreira fajl, jer ce to raditi admin, a pravo upisa ima samo writter i to se morati u posebnoj metodi 
-        {
-            IPrincipal principal = Thread.CurrentPrincipal;
-            ///if (principal.IsInRole("Admin"))
-            {
-                if (!File.Exists(fileName))
-                {
-                    FileStream fs = File.Create(fileName);
-                    fs.Close();
-
-                }
-            }
-            //else
-            //{
-            //    MyException ex = new MyException("Error! File with this name already exists\n");
-            //    throw new FaultException<MyException>(ex);
             //}
 
+            if (!File.Exists(DataBase.FileName))
+            {
+                MyException ex = new MyException("Error! file not found\n");
+                throw new FaultException<MyException>(ex);
+            }
+
+            if (DataBase.consumers.ContainsKey(consumer.ConsumerID))
+            {
+                return false;
+            }
+
+            lock (DataBase.lockObject)
+            {
+                DataBase.consumers[consumer.ConsumerID] = consumer;
+                DataBase.consumersDelta[consumer.ConsumerID] = consumer;
+                using (StreamWriter file = File.AppendText(DataBase.FileName))
+                {
+                    file.WriteLine(CreateConsumerString(consumer.ConsumerID, consumer.Region, consumer.City, consumer.Year, consumer.Consumation));
+                }
+            }
+
+            return true;
         }
 
-        public double MaxRegionConsumation(string fileName, string region)
+        public bool ModificationConsumer(Consumer consumer)//treba da se doda u fajl modifikovani potrosac
+        {
+            IPrincipal principal = Thread.CurrentPrincipal;
+            // if (!principal.IsInRole("Writer"))
+            //{ }
+
+            if (!DataBase.consumers.ContainsKey(consumer.ConsumerID))
+            {
+                return false;
+            }
+
+            if (!File.Exists(DataBase.FileName))
+            {
+                MyException ex = new MyException("Error!Cant open file\n");
+                throw new FaultException<MyException>(ex);
+            }
+
+            string TextAll = string.Empty;
+            string TextNew = CreateConsumerString(consumer.ConsumerID, consumer.Region, consumer.City, consumer.Year, consumer.Consumation);
+            string TextOld = CreateConsumerString(DataBase.consumers[consumer.ConsumerID].ConsumerID, DataBase.consumers[consumer.ConsumerID].Region,
+                DataBase.consumers[consumer.ConsumerID].City, DataBase.consumers[consumer.ConsumerID].Year, DataBase.consumers[consumer.ConsumerID].Consumation);
+
+            lock (DataBase.lockObject)
+            {
+                TextAll = File.ReadAllText(DataBase.FileName);
+
+                string NewTextAll = TextAll.Replace(TextOld, TextNew);
+
+                File.WriteAllText(DataBase.FileName, NewTextAll);
+                DataBase.consumers[consumer.ConsumerID] = consumer;
+                DataBase.consumersDelta[consumer.ConsumerID] = consumer;
+            }
+
+            return true;
+        }
+
+        public double CityConsumtion(string city)//metoda za readera
+        {
+            //IPrincipal principal = Thread.CurrentPrincipal;
+            //if (!principal.IsInRole("Reader"))
+            //{
+            //}
+
+            if (!File.Exists(DataBase.FileName))
+            {
+                MyException ex = new MyException("Error! file not find\n");
+                throw new FaultException<MyException>(ex);
+            }
+
+            double suma = 0;
+            int count = 0;
+            lock (DataBase.lockObject)
+            {
+                foreach (var item in DataBase.consumers.Values)
+                {
+                    if (item.City == city)
+                    {
+                        suma += item.Consumation;
+                        count++;
+                    }
+                }
+            }
+
+            Console.WriteLine("Srednja vrednost za grad " + city + " je {0}", Math.Round((suma / count), 2));
+
+            return suma / count;
+        }
+
+        public double MaxRegionConsumation(string region)
         {
 
-            double maxTemp = 0;
+            //IPrincipal principal = Thread.CurrentPrincipal;
+            //if (!principal.IsInRole("Reader"))
+            //{
+            //}
 
-            double max = 0;   //!
-
-            IPrincipal principal = Thread.CurrentPrincipal;
-         //   if (principal.IsInRole("Reader"))
+            if (!File.Exists(DataBase.FileName))
             {
-
-                if (!File.Exists(fileName))
-                {
-                    MyException ex = new MyException("Error! file not find\n");
-                    throw new FaultException<MyException>(ex);
-                }
-                else
-                {
-                    using (StreamReader sr = File.OpenText(fileName))
-                    {
-                        string s = "";
-                        char[] delimiter = { ' ', '\n' };
-
-                        while ((s = sr.ReadLine()) != null)
-                        {
-                            string[] words = s.Split(delimiter);
-                            if (Equals(region, words[3]))
-                            {
-                                if (double.TryParse(words[12], out maxTemp))
-                                {
-                                    if (max < maxTemp)
-                                    {
-                                        max = maxTemp;
-                                    }
-                                }
-                                else
-                                {
-                                    Console.WriteLine("String could not be parsed!\n");
-                                }
-                            }
-                        }
-
-                    }
-
-                }
-                Console.WriteLine("Maksimalna vrednost za " + region + " region je {0}", max);
+                MyException ex = new MyException("Error! file not find\n");
+                throw new FaultException<MyException>(ex);
             }
+
+            double maxTemp = 0;
+            double max = 0;
+            lock (DataBase.lockObject)
+            {
+                foreach (var item in DataBase.consumers.Values)
+                {
+                    if (item.Region == region)
+                    {
+                        if (max < maxTemp)
+                        {
+                            max = maxTemp;
+                        }
+                        max = item.Consumation;
+                    }
+                }
+            }
+            Console.WriteLine("Maksimalna vrednost za " + region + " region je {0}", max);
+
             return max;
         }
 
-
-
-        public void ModificationConsumer(string ID, string region, double consamption, string year, string city, string fileName)//treba da se doda u fajl modifikovani potrosac
+        public double RegionConsumtion(string region)  //srednja potronja za odredjeni region
         {
-            IPrincipal principal = Thread.CurrentPrincipal;
-           // if (principal.IsInRole("Writer"))
+            //IPrincipal principal = Thread.CurrentPrincipal;
+            //if (!principal.IsInRole("Reader"))
+            //{
+            //}
+
+            if (!File.Exists(DataBase.FileName))
             {
-                if (DataBase.consumers.ContainsKey(ID))
-                {
-                    if (File.Exists(fileName))
-                    {
-                        string s = "";
-
-                        char[] delimiter = { ' ', '\n' };
-                        string TextNew = "ID" + " " + ID + " " + "region " + region
-                                            + " " + "city " + city + " " + "Year " + " " + year + " "
-                                          + " Consumption " + " " + consamption;
-                        using (StreamReader sr = File.OpenText(fileName))
-                        {
-                            while ((s = sr.ReadLine()) != null)
-                            {
-
-
-
-                                string[] words = s.Split(delimiter);
-
-                                if (Equals(words[1], ID))
-                                {
-                                    string TextOld = "ID" + " " + DataBase.consumers[ID].ConumerID + " " + "region " + DataBase.consumers[ID].Region
-                                                + " " + "city " + DataBase.consumers[ID].City + " " + "Year " + " " + DataBase.consumers[ID].Year + " "
-                                              + " Consumption " + " " + DataBase.consumers[ID].Consumation;
-                                    string TextAll = File.ReadAllText(fileName);
-                                    string TextAllBlank = File.ReadAllText(fileName);
-                                    string NewTextAllBlank = TextAllBlank.Replace(TextAllBlank, string.Empty);
-                                    string NewTextAll = TextAll.Replace(TextOld, TextNew);
-
-
-                                    sr.Close();
-                                    File.WriteAllText(fileName, NewTextAllBlank);
-
-                                    File.WriteAllText(fileName, NewTextAll);
-
-
-                                    DataBase.consumers[ID].Region = region;
-                                    DataBase.consumers[ID].City = city;
-                                    DataBase.consumers[ID].Consumation = consamption;
-                                    DataBase.consumers[ID].Year = year;
-
-
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        MyException ex = new MyException("Error!Cant open file\n");
-                        throw new FaultException<MyException>(ex);
-                    }
-
-
-                }
+                MyException ex = new MyException("Error! file not find\n");
+                throw new FaultException<MyException>(ex);
             }
 
-        }
-
-
-        public double RegionConsumtion(string fileName, string region)  //srednja potronja za odredjeni region
-        {
-            double avg = 0;
-            double avgTemp = 0;
+            double suma = 0;
             int count = 0;
-            IPrincipal principal = Thread.CurrentPrincipal;
-           // if (principal.IsInRole("Reader"))
+            lock (DataBase.lockObject)
             {
-                if (!File.Exists(fileName))
+                foreach (var item in DataBase.consumers.Values)
                 {
-                    MyException ex = new MyException("Error! file not found\n");
-                    throw new FaultException<MyException>(ex);
-                }
-                else
-                {
-                    using (StreamReader sr = File.OpenText(fileName))
+                    if (item.Region == region)
                     {
-                        string s = "";
-                        char[] delimiter = { ' ', '\n' };
-
-                        while ((s = sr.ReadLine()) != null)
-                        {
-                            string[] words = s.Split(delimiter);
-                            if (Equals(region, words[3]))
-                            {
-                                if (double.TryParse(words[12], out avgTemp))
-                                {
-                                    avg += avgTemp;
-                                    count++;
-                                }
-                                else
-                                {
-                                    Console.WriteLine("String could not be parsed!\n");
-                                }
-                            }
-                        }
-
-                    }
-
-                }
-                Console.WriteLine("Srednja vrednost za " + region + " region je {0}", Math.Round((avg / count), 2));
-            }
-            return Math.Round((avg / count), 2);
-        }
-
-
-        public void RemoveConsumation(string fileName) //admin-pravo uklanjanja baze podataka (fajl-a)
-        {
-            IPrincipal principal = Thread.CurrentPrincipal;
-           // if (principal.IsInRole("Admin"))
-            {
-                if (File.Exists(fileName))
-                {
-                    File.Delete(fileName);
-
-                    if (fileName.Contains("_Copy"))
-                    {
-                        Common.Consumer.counter--;
+                        suma += item.Consumation;
+                        count++;
                     }
                 }
-                else
-                {
+            }
 
-                    MyException ex = new MyException("Error! File cannot be find\n");
-                    throw new FaultException<MyException>(ex);
-                }
+            Console.WriteLine("Srednja vrednost za grad " + region + " je {0}", Math.Round((suma / count), 2));
+
+            return suma / count;
+        }
+
+        public bool CreateFile() //ovde treba samo da se kreira fajl, jer ce to raditi admin, a pravo upisa ima samo writter i to se morati u posebnoj metodi 
+        {
+            IPrincipal principal = Thread.CurrentPrincipal;
+            ///if (!principal.IsInRole("Admin"))
+            ///{
+            ///}
+
+            if (File.Exists(DataBase.FileName))
+            {
+                return false;
+            }
+
+            lock (DataBase.lockObject)
+            {
+                FileStream fs = File.Create(DataBase.FileName);
+                fs.Close();
+            }
+
+            if (StateService.stateService == EStateServers.Primarni)
+            {
+                ChannelFactory<IDataBaseManagement> cfh2 = new ChannelFactory<IDataBaseManagement>("sekundarni");
+                IDataBaseManagement proxy2 = cfh2.CreateChannel();
+                proxy2.CreateFile();
+            }
+
+            return true;
+        }
+
+        public void RemoveConsumation() //admin-pravo uklanjanja baze podataka (fajl-a)
+        {
+            IPrincipal principal = Thread.CurrentPrincipal;
+            // if (!principal.IsInRole("Admin"))
+            //{}
+
+            if (!File.Exists(DataBase.FileName))
+            {
+                MyException ex = new MyException("Error! File cannot be find\n");
+                throw new FaultException<MyException>(ex);
+            }
+
+            lock (DataBase.lockObject)
+            {
+                File.Delete(DataBase.FileName);
+            }
+
+            if (StateService.stateService == EStateServers.Primarni)
+            {
+                ChannelFactory<IDataBaseManagement> cfh2 = new ChannelFactory<IDataBaseManagement>("sekundarni");
+                IDataBaseManagement proxy2 = cfh2.CreateChannel();
+                proxy2.RemoveConsumation();
             }
         }
 
-        public void ArchiveConsumation(string fileName)
+        public void ArchiveConsumation()
         {
-
-            string name;
+           
             IPrincipal principal = Thread.CurrentPrincipal;
-           // if (principal.IsInRole("Admin"))
-            {
-                if (!File.Exists(fileName))
-                {
-                    MyException ex = new MyException("Error! File doesn't exist\n");
-                    throw new FaultException<MyException>(ex);
-                }
-                else
-                {
+            // if (!principal.IsInRole("Admin"))
+            //{
+            //}
 
-                    Common.Consumer.counter++;
-                    name = fileName + "_Copy" + "(" + Common.Consumer.counter + ")";
-                    File.Copy(fileName, name);
-                }
+            if (!File.Exists(DataBase.FileName))
+            {
+                MyException ex = new MyException("Error! File doesn't exist\n");
+                throw new FaultException<MyException>(ex);
             }
 
+            string fileNameCopy = DataBase.FileName;
+            do
+            {
+                fileNameCopy += "-copy";
+
+            } while (File.Exists(fileNameCopy));
+            File.Copy(DataBase.FileName, fileNameCopy);
+
+            if (StateService.stateService == EStateServers.Primarni)
+            {
+                ChannelFactory<IDataBaseManagement> cfh2 = new ChannelFactory<IDataBaseManagement>("sekundarni");
+                IDataBaseManagement proxy2 = cfh2.CreateChannel();
+                proxy2.ArchiveConsumation();
+            }
         }
 
         public Dictionary<string, Consumer> UzmiSve()
@@ -332,42 +272,18 @@ namespace Server
 
         public void AddAll(Dictionary<string, Consumer> data)
         {
-
-            bool changed = false;
-
-            foreach (Consumer c in DataBase.consumers.Values)
+            lock (DataBase.lockObject)
             {
-                if (!data.ContainsKey(c.ConumerID))
+                foreach (Consumer c in data.Values)
                 {
-                    //da li je objekat mozda izbrisan 
-                    DataBase.consumers.Remove(c.ConumerID);
-                    changed = true;
-
-
-                }
-                else if (c.TimeStamp != data[c.ConumerID].TimeStamp)
-                {
-                    DataBase.consumers[c.ConumerID] = data[c.ConumerID];
-                    changed = true;
-                }
-
-            }
-            foreach (Consumer c in data.Values)
-            {
-                if (!DataBase.consumers.ContainsKey(c.ConumerID))
-                {
-                    DataBase.consumers[c.ConumerID] = c;
-                    changed = true;
+                    DataBase.consumers[c.ConsumerID] = c;
                 }
             }
+        }
 
-            if (changed)
-            {
-                Console.WriteLine("Promenjeno u replikaciji nesto");
-            }
-
-
-
+        private string CreateConsumerString(string ID, string region, string city, string year, double consamption)
+        {
+            return $"ID {ID} region {region} city {city} Year {year} Consumption {consamption}";
         }
     }
 }

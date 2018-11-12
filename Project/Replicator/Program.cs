@@ -14,22 +14,18 @@ namespace Replicator
         private static IDatabaseManagement proxy2;
         static void Main(string[] args)
         {
-            Connect();
-
-            Dictionary<string,Consumer> data= proxy1.UzmiSve();
-            proxy2.AddAll(data); //dodaj sve
-            //proxy2 dodaje sve 
-            foreach (var d in data.Values)
+           
+            while (true)
             {
-                Console.WriteLine("ID" + " " + d.ConumerID + " " + "region " + d.Region
-                                        + " " + "city " + d.City + " " + "Year " + " " + d.Year + " "
-                                      + " Consumption " + " " + d.Consumation);
-            }
-          
-            Console.WriteLine("Odradjena replikacija");
-            Console.ReadLine();
-        }
+                Connect();
+                Dictionary<string, Consumer> data = proxy1.UzmiSve();
+                proxy2.AddAll(data); //dodaj sve
+                                     //proxy2 dodaje sve 
 
+                Console.WriteLine("Odradjena replikacija");
+            }
+           
+        }
 
         static void Connect()
         {

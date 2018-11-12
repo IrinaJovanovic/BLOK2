@@ -9,6 +9,9 @@ namespace Server
 {
     public class DataBase
     {
-        public static readonly Dictionary<string, Consumer> consumers = new Dictionary<string, Consumer>(); 
+        public const string FileName = "Baza.txt";
+        public static readonly Dictionary<string, Consumer> consumers = new Dictionary<string, Consumer>();
+        public static readonly Dictionary<string, Consumer> consumersDelta = new Dictionary<string, Consumer>();
+        public static readonly object lockObject = new object();
     }
 }

@@ -1,58 +1,87 @@
 ﻿using Common;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace SystemMonitor
 {
     class Program
     {
-        private static IStateService primarni;
-        private static IStateService sekundarni;
-
-
         static void Main(string[] args)
         {
-            Connect();
+            IStateService primarni = null, sekundarni = null;
+            EStateServers stanjePrimar, stanjeSekundar;
+
+            while (true)
+            {
+                try
+                {
+                    ChannelFactory<IStateService> channel = new ChannelFactory<IStateService>("server1");
+                    primarni = channel.CreateChannel();
+                    stanjePrimar = primarni.StateCheck();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Greska na primarnom: " + ex.Message);
+                    stanjePrimar = EStateServers.Nedostupno;
+                }
+
+                try
+                {
+                    ChannelFactory<IStateService> channel = new ChannelFactory<IStateService>("server2");
+                    sekundarni = channel.CreateChannel();
+                    stanjeSekundar = sekundarni.StateCheck();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Greska na sekundarnom: " + ex.Message);
+                    stanjeSekundar = EStateServers.Nedostupno;
+                }
+
+                Console.WriteLine($"Stanja servisa.\n- primarni: {stanjePrimar}\n- sekundarni: {stanjeSekundar}");
+
+                if ((stanjePrimar == EStateServers.Nepoznato || stanjePrimar == EStateServers.Sekundarni) && stanjeSekundar == EStateServers.Nepoznato)
+                {
+                    SetState(primarni, EStateServers.Primarni);
+                    SetState(sekundarni, EStateServers.Sekundarni);
+                }
+                else if (stanjePrimar == EStateServers.Primarni && (stanjeSekundar == EStateServers.Nepoznato || stanjeSekundar == EStateServers.Primarni))
+                {
+                    SetState(sekundarni, EStateServers.Sekundarni);
+                }
+                else if (stanjePrimar == EStateServers.Nepoznato && stanjeSekundar == EStateServers.Primarni)
+                {
+                    SetState(primarni, EStateServers.Sekundarni);
+                }
+                else if ((stanjePrimar == EStateServers.Sekundarni || stanjePrimar == EStateServers.Nepoznato) && (stanjeSekundar == EStateServers.Nedostupno || stanjeSekundar == EStateServers.Sekundarni))
+                {
+                    SetState(primarni, EStateServers.Primarni);
+                }
+                else if (stanjePrimar == EStateServers.Nedostupno && (stanjeSekundar == EStateServers.Sekundarni || stanjeSekundar == EStateServers.Nepoznato))
+                {
+                    SetState(sekundarni, EStateServers.Primarni);
+                }
+                else if (stanjePrimar == EStateServers.Nedostupno && stanjeSekundar == EStateServers.Nedostupno)
+                {
+                    Console.WriteLine("Oba servera su pala. ALARM!!!");
+                }
+
+                Thread.Sleep(5000);
+            }
         }
 
-        static void Connect()
+        private static void SetState(IStateService proxy, EStateServers state)
         {
             try
             {
-                ChannelFactory<IStateService> cPrimarni = new ChannelFactory<IStateService>("server1");
-                primarni = cPrimarni.CreateChannel();
-                primarni.AzuriranjeStanja(EStateServers.Primarni);
+                proxy.StateUpdate(state);
             }
-            catch (CommunicationException ex)
+            catch (Exception ex)
             {
-                Console.WriteLine("Sekundarni servis nedostupan . Razlog: " + ex.Message);
-            }
-
-            try
-            {
-                ChannelFactory<IStateService> cSekundarni = new ChannelFactory<IStateService>("server2");
-                primarni = cSekundarni.CreateChannel();
-                primarni.AzuriranjeStanja(EStateServers.Sekundarni);
-            }
-            catch (CommunicationException ex)
-            {
-                Console.WriteLine("Sekundarni servis nedostupan . Razlog: " + ex.Message);
-            }
-
-            if (primarni == null && sekundarni == null)
-            {
-                Console.WriteLine("Neuspelo povezivanje na servise");
-                Environment.Exit(0);
+                Console.WriteLine("Greska na sekundarnom: " + ex.Message); //logovati!
             }
         }
-
-
-
     }
-
 }
 
