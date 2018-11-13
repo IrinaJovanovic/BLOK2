@@ -17,10 +17,18 @@ namespace Server
     {
         public bool AddConsumer(Consumer consumer)
         {
-            IPrincipal principal = Thread.CurrentPrincipal;
-            //if (!principal.IsInRole("Wr")){
+            if (StateService.stateService != EStateServers.Primarni)
+            {
+                MyException ex = new MyException("Error! Not primary\n");
+                throw new FaultException<MyException>(ex);
+            }
 
-            //}
+            IPrincipal principal = Thread.CurrentPrincipal;
+            if (!principal.IsInRole(Permissions.Writting.ToString()))
+            {
+                MyException ex = new MyException("Error! ID NOT A WRITER\n");
+                throw new FaultException<MyException>(ex);
+            }
 
             if (!File.Exists(DataBase.FileName))
             {
@@ -48,9 +56,18 @@ namespace Server
 
         public bool ModificationConsumer(Consumer consumer)//treba da se doda u fajl modifikovani potrosac
         {
+            if (StateService.stateService != EStateServers.Primarni)
+            {
+                MyException ex = new MyException("Error! Not primary\n");
+                throw new FaultException<MyException>(ex);
+            }
+
             IPrincipal principal = Thread.CurrentPrincipal;
-            // if (!principal.IsInRole("Writer"))
-            //{ }
+            if (!principal.IsInRole(Permissions.Modify.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A WRITER\n");
+                throw new FaultException<MyException>(ex);
+            }
 
             if (!DataBase.consumers.ContainsKey(consumer.ConsumerID))
             {
@@ -84,10 +101,24 @@ namespace Server
 
         public double CityConsumtion(string city)//metoda za readera
         {
-            //IPrincipal principal = Thread.CurrentPrincipal;
-            //if (!principal.IsInRole("Reader"))
-            //{
-            //}
+            if (StateService.stateService != EStateServers.Primarni)
+            {
+                MyException ex = new MyException("Error! Not primary\n");
+                throw new FaultException<MyException>(ex);
+            }
+
+            if (StateService.stateService != EStateServers.Primarni)
+            {
+                MyException ex = new MyException("Error! Not primary\n");
+                throw new FaultException<MyException>(ex);
+            }
+
+            IPrincipal principal = Thread.CurrentPrincipal;
+            if (!principal.IsInRole(Permissions.ReadingCityAvgConsumption.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A READER\n");
+                throw new FaultException<MyException>(ex);
+            }
 
             if (!File.Exists(DataBase.FileName))
             {
@@ -116,11 +147,19 @@ namespace Server
 
         public double MaxRegionConsumation(string region)
         {
+            if (StateService.stateService != EStateServers.Primarni)
+            {
+                MyException ex = new MyException("Error! Not primary\n");
+                throw new FaultException<MyException>(ex);
+            }
 
-            //IPrincipal principal = Thread.CurrentPrincipal;
-            //if (!principal.IsInRole("Reader"))
-            //{
-            //}
+            IPrincipal principal = Thread.CurrentPrincipal;
+            if (!principal.IsInRole(Permissions.ReadingMaxAvgConsumption.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A READER\n");
+                throw new FaultException<MyException>(ex);
+            }
+
 
             if (!File.Exists(DataBase.FileName))
             {
@@ -151,10 +190,18 @@ namespace Server
 
         public double RegionConsumtion(string region)  //srednja potronja za odredjeni region
         {
-            //IPrincipal principal = Thread.CurrentPrincipal;
-            //if (!principal.IsInRole("Reader"))
-            //{
-            //}
+            if (StateService.stateService != EStateServers.Primarni)
+            {
+                MyException ex = new MyException("Error! Not primary\n");
+                throw new FaultException<MyException>(ex);
+            }
+
+            IPrincipal principal = Thread.CurrentPrincipal;
+            if (!principal.IsInRole(Permissions.ReadingRegionAvgConsumption.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A READER\n");
+                throw new FaultException<MyException>(ex);
+            }
 
             if (!File.Exists(DataBase.FileName))
             {
@@ -183,10 +230,18 @@ namespace Server
 
         public bool CreateFile() //ovde treba samo da se kreira fajl, jer ce to raditi admin, a pravo upisa ima samo writter i to se morati u posebnoj metodi 
         {
+            if (StateService.stateService != EStateServers.Primarni)
+            {
+                MyException ex = new MyException("Error! Not primary\n");
+                throw new FaultException<MyException>(ex);
+            }
             IPrincipal principal = Thread.CurrentPrincipal;
-            ///if (!principal.IsInRole("Admin"))
-            ///{
-            ///}
+            if (!principal.IsInRole(Permissions.Create.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A READER\n");
+                throw new FaultException<MyException>(ex);
+            }
+
 
             if (File.Exists(DataBase.FileName))
             {
@@ -201,8 +256,8 @@ namespace Server
 
             if (StateService.stateService == EStateServers.Primarni)
             {
-                ChannelFactory<IDataBaseManagement> cfh2 = new ChannelFactory<IDataBaseManagement>("sekundarni");
-                IDataBaseManagement proxy2 = cfh2.CreateChannel();
+                ChannelFactory<IReplicator> cfh2 = new ChannelFactory<IReplicator>("sekundarni");
+                IReplicator proxy2 = cfh2.CreateChannel();
                 proxy2.CreateFile();
             }
 
@@ -211,9 +266,17 @@ namespace Server
 
         public void RemoveConsumation() //admin-pravo uklanjanja baze podataka (fajl-a)
         {
+            if (StateService.stateService != EStateServers.Primarni)
+            {
+                MyException ex = new MyException("Error! Not primary\n");
+                throw new FaultException<MyException>(ex);
+            }
             IPrincipal principal = Thread.CurrentPrincipal;
-            // if (!principal.IsInRole("Admin"))
-            //{}
+            if (!principal.IsInRole(Permissions.Deleting.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A READER\n");
+                throw new FaultException<MyException>(ex);
+            }
 
             if (!File.Exists(DataBase.FileName))
             {
@@ -228,19 +291,25 @@ namespace Server
 
             if (StateService.stateService == EStateServers.Primarni)
             {
-                ChannelFactory<IDataBaseManagement> cfh2 = new ChannelFactory<IDataBaseManagement>("sekundarni");
-                IDataBaseManagement proxy2 = cfh2.CreateChannel();
+                ChannelFactory<IReplicator> cfh2 = new ChannelFactory<IReplicator>("sekundarni");
+                IReplicator proxy2 = cfh2.CreateChannel();
                 proxy2.RemoveConsumation();
             }
         }
 
         public void ArchiveConsumation()
         {
-           
+            if (StateService.stateService != EStateServers.Primarni)
+            {
+                MyException ex = new MyException("Error! Not primary\n");
+                throw new FaultException<MyException>(ex);
+            }
             IPrincipal principal = Thread.CurrentPrincipal;
-            // if (!principal.IsInRole("Admin"))
-            //{
-            //}
+            if (!principal.IsInRole(Permissions.Arhiving.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A READER\n");
+                throw new FaultException<MyException>(ex);
+            }
 
             if (!File.Exists(DataBase.FileName))
             {
@@ -258,32 +327,17 @@ namespace Server
 
             if (StateService.stateService == EStateServers.Primarni)
             {
-                ChannelFactory<IDataBaseManagement> cfh2 = new ChannelFactory<IDataBaseManagement>("sekundarni");
-                IDataBaseManagement proxy2 = cfh2.CreateChannel();
+                ChannelFactory<IReplicator> cfh2 = new ChannelFactory<IReplicator>("sekundarni");
+                IReplicator proxy2 = cfh2.CreateChannel();
                 proxy2.ArchiveConsumation();
             }
         }
 
-        public Dictionary<string, Consumer> UzmiSve()
-        {
-            //throw new NotImplementedException();
-            return DataBase.consumers;
-        }
-
-        public void AddAll(Dictionary<string, Consumer> data)
-        {
-            lock (DataBase.lockObject)
-            {
-                foreach (Consumer c in data.Values)
-                {
-                    DataBase.consumers[c.ConsumerID] = c;
-                }
-            }
-        }
 
         private string CreateConsumerString(string ID, string region, string city, string year, double consamption)
         {
             return $"ID {ID} region {region} city {city} Year {year} Consumption {consamption}";
         }
+
     }
 }

@@ -5,7 +5,7 @@ using Common;
 
 namespace Client
 {
-    public class FailOverClient:IDataBaseManagement
+    public class FailOverClient : IDataBaseManagement
     {
         private int nextTry = 0;
         private List<ChannelFactory<IDataBaseManagement>> _dataFactories = new List<ChannelFactory<IDataBaseManagement>>();
@@ -18,24 +18,66 @@ namespace Client
             _dataFactories.Add(new ChannelFactory<IDataBaseManagement>("secondary"));
         }
 
-        public void AddAll(Dictionary<string, Consumer> data)
+        public bool AddConsumer(Consumer c)
         {
-            throw new NotImplementedException();
-        }
+            bool isSuccess = false;
+            bool isAdded = false;
+            do
+            {
+                try
+                {
+                    isAdded =_dataService.AddConsumer(c);
+                    isSuccess = true;
+                }
+                catch
+                {
+                    _isClientConnected = false;
+                    Connect();
+                    //opciono logovanje
+                }
+            } while (!isSuccess);
 
-        public void AddConsumer(Consumer c)
-        {
-            throw new NotImplementedException();
+            return isAdded;
         }
 
         public void ArchiveConsumation()
         {
-            throw new NotImplementedException();
+            bool isSuccess = false;
+            do
+            {
+                try
+                {
+                    _dataService.ArchiveConsumation();
+                    isSuccess = true;
+                }
+                catch
+                {
+                    _isClientConnected = false;
+                    Connect();
+                }
+            }
+            while (!isSuccess);
         }
 
         public double CityConsumtion(string city)
         {
-            throw new NotImplementedException();
+            bool isSuccess = false;
+            double value = 0;
+            do
+            {
+                try
+                {
+                    value = _dataService.CityConsumtion(city);
+                    isSuccess = true;
+                }
+                catch
+                {
+                    _isClientConnected = false;
+                    Connect();
+                }
+            }
+            while (!isSuccess);
+            return value;
         }
 
         public void Connect()
@@ -45,6 +87,7 @@ namespace Client
                 _dataService = _dataFactories[nextTry].CreateChannel();
                 try
                 {
+                    _dataService.CreateFile();
                     _isClientConnected = true;
                     Console.WriteLine("Client conneced to server at: {0}", _dataFactories[nextTry].Endpoint.Name);
                 }
@@ -57,47 +100,103 @@ namespace Client
             }
         }
 
-        public void CreateFile()
+        public bool CreateFile()
         {
-            bool written = false;
+            bool isCreated = false;
+            bool isSuccess = false;
             do
             {
                 try
                 {
-                    _dataService.CreateFile();
-                    written = true;
+                    isCreated =_dataService.CreateFile();
+                    isSuccess = true;
+                }
+                catch (Exception)
+                {
+                    _isClientConnected = false;
+                    Connect();
+                    
+                }
+            } while (!isSuccess);
+            return isCreated;
+        }
+
+        public double MaxRegionConsumation(string region)
+        {
+            double value = 0;
+            bool isSuccess = false;
+            do
+            {
+                try
+                {
+                    value = _dataService.MaxRegionConsumation(region);
+                    isSuccess = true;
                 }
                 catch (Exception)
                 {
                     _isClientConnected = false;
                     Connect();
                 }
-            } while (!written);
+            } while (!isSuccess);
+            return value;
         }
 
-        public double MaxRegionConsumation(string region)
+        public bool ModificationConsumer(Consumer consumer)
         {
-            throw new NotImplementedException();
-        }
-
-        public void ModificationConsumer(string ID, string region, string city, string year, double consamption)
-        {
-            throw new NotImplementedException();
+            bool isSuccess = false;
+            bool isModified = false;
+            do
+            {
+                try
+                {
+                    isModified = _dataService.ModificationConsumer(consumer);
+                    isSuccess = true;
+                }
+                catch (Exception)
+                {
+                    _isClientConnected = false;
+                    Connect();
+                }
+            } while (!isSuccess);
+            return isModified;
         }
 
         public double RegionConsumtion(string region)
         {
-            throw new NotImplementedException();
+            double value = 0;
+            bool isSuccess = false;
+            do
+            {
+                try
+                {
+                    value = _dataService.RegionConsumtion(region);
+                    isSuccess = true;
+                }
+                catch (Exception)
+                {
+                    _isClientConnected = false;
+                    Connect();
+                }
+            } while (!isSuccess);
+            return value;
         }
 
         public void RemoveConsumation()
         {
-            throw new NotImplementedException();
-        }
-
-        public Dictionary<string, Consumer> UzmiSve()
-        {
-            throw new NotImplementedException();
+            bool isSuccess = false;
+            do
+            {
+                try
+                {
+                    _dataService.RemoveConsumation();
+                    isSuccess = true;
+                }
+                catch
+                {
+                    _isClientConnected = false;
+                    Connect();
+                }
+            } while (!isSuccess);
         }
     }
 }

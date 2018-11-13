@@ -17,7 +17,7 @@ namespace Common
         string year;
         double consumation;
         //koji je tip
-      
+       public static int counter=0;
 
        [DataMember]
        DateTime timeStamp;

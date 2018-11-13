@@ -11,6 +11,7 @@ namespace Server
     {
         private static ServiceHost svc;
         private static ServiceHost svc2;
+        private static ServiceHost svc3;
 
         static void Main(string[] args)
         {
@@ -28,8 +29,11 @@ namespace Server
         {
             svc = new ServiceHost(typeof(DataBaseManagement));
             svc2 = new ServiceHost(typeof(StateService));
+            svc3 = new ServiceHost(typeof(Replicator));
+
             svc.Open();
             svc2.Open();
+            svc3.Open();
         }
 
         static void ReplicateThread()
@@ -42,23 +46,23 @@ namespace Server
                     continue;
                 }
 
-                ChannelFactory<IDataBaseManagement> cfh2 = new ChannelFactory<IDataBaseManagement>("sekundarni");
-                IDataBaseManagement proxy2 = cfh2.CreateChannel();
+               
 
                 lock (DataBase.lockObject)
                 {
                     try
                     {
-                        proxy2.AddAll(DataBase.consumersDelta);
+                        ChannelFactory<IReplicator> cfh2 = new ChannelFactory<IReplicator>("sekundarni");
+                        IReplicator proxy2 = cfh2.CreateChannel();
+                        proxy2.SendDelta(DataBase.consumersDelta);
                         DataBase.consumersDelta.Clear();
                     }
                     catch (Exception)
                     {
-                        Console.WriteLine("Greska pri replikaciji");
+                        //Console.WriteLine("Greska pri replikaciji");
                     }
                 }
 
-                Console.WriteLine("Odradjena replikacija");
                 Thread.Sleep(2000);
             }
         }
