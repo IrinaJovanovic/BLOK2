@@ -23,13 +23,13 @@ namespace Server
                 throw new FaultException<MyException>(ex);
             }
 
-            IPrincipal principal = Thread.CurrentPrincipal;
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
             if (!principal.IsInRole(Permissions.Writting.ToString()))
             {
-                MyException ex = new MyException("Error! ID NOT A WRITER\n");
-                throw new FaultException<MyException>(ex);
+                SecurityException ex = new SecurityException("Error! IS NOT A Writer\n");
+                throw new FaultException<SecurityException>(ex);
             }
-
+            // CustomAuditBehavior.AuthenticationSuccess(principal.Identity.Name.ToString());
             if (!File.Exists(DataBase.FileName))
             {
                 MyException ex = new MyException("Error! file not found\n");
@@ -62,11 +62,11 @@ namespace Server
                 throw new FaultException<MyException>(ex);
             }
 
-            IPrincipal principal = Thread.CurrentPrincipal;
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
             if (!principal.IsInRole(Permissions.Modify.ToString()))
             {
-                MyException ex = new MyException("Error! IS NOT A WRITER\n");
-                throw new FaultException<MyException>(ex);
+                SecurityException ex = new SecurityException("Error! IS NOT A Writer\n");
+                throw new FaultException<SecurityException>(ex);
             }
 
             if (!DataBase.consumers.ContainsKey(consumer.ConsumerID))
@@ -113,11 +113,11 @@ namespace Server
                 throw new FaultException<MyException>(ex);
             }
 
-            IPrincipal principal = Thread.CurrentPrincipal;
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
             if (!principal.IsInRole(Permissions.ReadingCityAvgConsumption.ToString()))
             {
-                MyException ex = new MyException("Error! IS NOT A READER\n");
-                throw new FaultException<MyException>(ex);
+                SecurityException ex = new SecurityException("Error! IS NOT A Reader\n");
+                throw new FaultException<SecurityException>(ex);
             }
 
             if (!File.Exists(DataBase.FileName))
@@ -153,10 +153,10 @@ namespace Server
                 throw new FaultException<MyException>(ex);
             }
 
-            IPrincipal principal = Thread.CurrentPrincipal;
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
             if (!principal.IsInRole(Permissions.ReadingMaxAvgConsumption.ToString()))
             {
-                MyException ex = new MyException("Error! IS NOT A READER\n");
+                MyException ex = new MyException("Error! IS NOT A Reader\n");
                 throw new FaultException<MyException>(ex);
             }
 
@@ -196,11 +196,11 @@ namespace Server
                 throw new FaultException<MyException>(ex);
             }
 
-            IPrincipal principal = Thread.CurrentPrincipal;
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
             if (!principal.IsInRole(Permissions.ReadingRegionAvgConsumption.ToString()))
             {
-                MyException ex = new MyException("Error! IS NOT A READER\n");
-                throw new FaultException<MyException>(ex);
+                SecurityException ex = new SecurityException("Error! IS NOT A READER\n");
+                throw new FaultException<SecurityException>(ex);
             }
 
             if (!File.Exists(DataBase.FileName))
@@ -232,16 +232,18 @@ namespace Server
         {
             if (StateService.stateService != EStateServers.Primarni)
             {
-                MyException ex = new MyException("Error! Not primary\n");
-                throw new FaultException<MyException>(ex);
-            }
-            IPrincipal principal = Thread.CurrentPrincipal;
-            if (!principal.IsInRole(Permissions.Create.ToString()))
-            {
-                MyException ex = new MyException("Error! IS NOT A READER\n");
+                MyException ex = new MyException("Error! IS NOT a primary\n");
                 throw new FaultException<MyException>(ex);
             }
 
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
+
+            if (!principal.IsInRole(Permissions.Create.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A Reader\n");
+                throw new FaultException<MyException>(ex);
+            }
+            //   CustomAuditBehavior.AuthenticationSuccess(principal.Identity.Name.ToString());
 
             if (File.Exists(DataBase.FileName))
             {
@@ -253,25 +255,40 @@ namespace Server
                 FileStream fs = File.Create(DataBase.FileName);
                 fs.Close();
             }
-
-            if (StateService.stateService == EStateServers.Primarni)
+            try
             {
-                ChannelFactory<IReplicator> cfh2 = new ChannelFactory<IReplicator>("sekundarni");
-                IReplicator proxy2 = cfh2.CreateChannel();
-                proxy2.CreateFile();
+                if (StateService.stateService == EStateServers.Primarni)
+                {
+                    ChannelFactory<IReplicator> cfh2 = new ChannelFactory<IReplicator>("sekundarni");
+                    IReplicator proxy2 = cfh2.CreateChannel();
+
+
+                    proxy2.CreateFile();
+                }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+            //WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            //if (!identity.IsAuthenticated)
+            //{
+            //    MyException ex = new MyException("Neuspela autentifikacija ");
+            //    throw new FaultException<MyException>(ex);
+            //}
+
 
             return true;
         }
 
-        public void RemoveConsumation() //admin-pravo uklanjanja baze podataka (fajl-a)
+        public bool RemoveConsumation() //admin-pravo uklanjanja baze podataka (fajl-a)
         {
             if (StateService.stateService != EStateServers.Primarni)
             {
-                MyException ex = new MyException("Error! Not primary\n");
-                throw new FaultException<MyException>(ex);
+                SecurityException ex = new SecurityException("Error! IS NOT A primary\n");
+                throw new FaultException<SecurityException>(ex);
             }
-            IPrincipal principal = Thread.CurrentPrincipal;
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
             if (!principal.IsInRole(Permissions.Deleting.ToString()))
             {
                 MyException ex = new MyException("Error! IS NOT A READER\n");
@@ -280,13 +297,15 @@ namespace Server
 
             if (!File.Exists(DataBase.FileName))
             {
-                MyException ex = new MyException("Error! File cannot be find\n");
-                throw new FaultException<MyException>(ex);
+                return false;
+                //MyException ex = new MyException("Error! File cannot be find\n");
+                //throw new FaultException<MyException>(ex);
             }
 
             lock (DataBase.lockObject)
             {
                 File.Delete(DataBase.FileName);
+
             }
 
             if (StateService.stateService == EStateServers.Primarni)
@@ -295,25 +314,28 @@ namespace Server
                 IReplicator proxy2 = cfh2.CreateChannel();
                 proxy2.RemoveConsumation();
             }
+            return true;
         }
 
-        public void ArchiveConsumation()
+        public bool ArchiveConsumation()
         {
             if (StateService.stateService != EStateServers.Primarni)
             {
                 MyException ex = new MyException("Error! Not primary\n");
                 throw new FaultException<MyException>(ex);
             }
-            IPrincipal principal = Thread.CurrentPrincipal;
-            if (!principal.IsInRole(Permissions.Arhiving.ToString()))
-            {
-                MyException ex = new MyException("Error! IS NOT A READER\n");
-                throw new FaultException<MyException>(ex);
-            }
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
+
 
             if (!File.Exists(DataBase.FileName))
             {
-                MyException ex = new MyException("Error! File doesn't exist\n");
+                return false;
+                //MyException ex = new MyException("Error! File doesn't exist\n");
+                //throw new FaultException<MyException>(ex);
+            }
+            if (!principal.IsInRole(Permissions.Arhiving.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A Reader\n");
                 throw new FaultException<MyException>(ex);
             }
 
@@ -331,6 +353,7 @@ namespace Server
                 IReplicator proxy2 = cfh2.CreateChannel();
                 proxy2.ArchiveConsumation();
             }
+            return true;
         }
 
 
@@ -339,5 +362,18 @@ namespace Server
             return $"ID {ID} region {region} city {city} Year {year} Consumption {consamption}";
         }
 
+        public bool CheckIfAlive()
+        {
+            bool p = false;
+
+            if (StateService.stateService != EStateServers.Primarni)
+            {
+                //MyException ex = new MyException("Error!");
+                //throw new FaultException<MyException>(ex);
+                return false;
+            }
+            p = true;
+            return p;
+        }
     }
 }

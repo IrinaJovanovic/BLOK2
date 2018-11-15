@@ -20,11 +20,11 @@ namespace Server
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void ArchiveConsumation();
+        bool ArchiveConsumation();
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void RemoveConsumation();
+        bool RemoveConsumation();
 
 
     }

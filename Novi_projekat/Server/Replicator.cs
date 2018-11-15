@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.ServiceModel;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 
@@ -11,22 +12,25 @@ namespace Server
 {
     public class Replicator : IReplicator
     {
-        public void ArchiveConsumation()
+        public bool ArchiveConsumation()
         {
             if (StateService.stateService != EStateServers.Sekundarni)
             {
-                MyException ex = new MyException("Error! Not secundary\n");
+                MyException ex = new MyException("Error! Not secondary\n");
                 throw new FaultException<MyException>(ex);
             }
-           // IPrincipal principal = Thread.CurrentPrincipal;
-            // if (!principal.IsInRole("Admin"))
-            //{
-            //}
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
+            if (!principal.IsInRole(Permissions.Arhiving.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A Reader\n");
+                throw new FaultException<MyException>(ex);
+            }
 
             if (!File.Exists(DataBase.FileName))
             {
-                MyException ex = new MyException("Error! File doesn't exist\n");
-                throw new FaultException<MyException>(ex);
+                //MyException ex = new MyException("Error! File doesn't exist\n");
+                //throw new FaultException<MyException>(ex);
+                return false;
             }
 
             string fileNameCopy = DataBase.FileName;
@@ -37,7 +41,7 @@ namespace Server
             } while (File.Exists(fileNameCopy));
             File.Copy(DataBase.FileName, fileNameCopy);
 
-           
+            return true;
         }
 
         public bool CreateFile()
@@ -47,10 +51,12 @@ namespace Server
                 MyException ex = new MyException("Error! Not secundary\n");
                 throw new FaultException<MyException>(ex);
             }
-            //IPrincipal principal = Thread.CurrentPrincipal;
-            ///if (!principal.IsInRole("Admin"))
-            ///{
-            ///}
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
+            if (!principal.IsInRole(Permissions.Create.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A Reader\n");
+                throw new FaultException<MyException>(ex);
+            }
 
             if (File.Exists(DataBase.FileName))
             {
@@ -63,26 +69,28 @@ namespace Server
                 fs.Close();
             }
 
-           
-
             return true;
         }
 
-        public void RemoveConsumation()
+        public bool RemoveConsumation()
         {
             if (StateService.stateService != EStateServers.Sekundarni)
             {
                 MyException ex = new MyException("Error! Not secondary\n");
                 throw new FaultException<MyException>(ex);
             }
-            //IPrincipal principal = Thread.CurrentPrincipal;
-            // if (!principal.IsInRole("Admin"))
-            //{}
+            CustomPrincipal principal = Thread.CurrentPrincipal as CustomPrincipal;
+            if (!principal.IsInRole(Permissions.Deleting.ToString()))
+            {
+                MyException ex = new MyException("Error! IS NOT A Reader\n");
+                throw new FaultException<MyException>(ex);
+            }
 
             if (!File.Exists(DataBase.FileName))
             {
-                MyException ex = new MyException("Error! File cannot be find\n");
-                throw new FaultException<MyException>(ex);
+                //MyException ex = new MyException("Error! File cannot be find\n");
+                //throw new FaultException<MyException>(ex);
+                return false;
             }
 
             lock (DataBase.lockObject)
@@ -90,7 +98,7 @@ namespace Server
                 File.Delete(DataBase.FileName);
             }
 
-           
+            return true;
         }
 
         public bool SendDelta(Dictionary<string, Consumer> data)
@@ -100,8 +108,11 @@ namespace Server
                 MyException ex = new MyException("Error! Not secondary\n");
                 throw new FaultException<MyException>(ex);
             }
+
             if (!File.Exists(DataBase.FileName))
-            { return false; }
+            {
+                return false;
+            }
 
             lock (DataBase.lockObject)
             {
@@ -115,7 +126,6 @@ namespace Server
                     }
                 }
             }
-
             return true;
         }
         private string CreateConsumerString(string ID, string region, string city, string year, double consamption)

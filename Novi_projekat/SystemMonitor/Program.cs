@@ -79,7 +79,7 @@ namespace SystemMonitor
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Greska na sekundarnom: " + ex.Message); //logovati!
+                Console.WriteLine("Greska na serveru:" + ex.Message); //logovati!
             }
         }
     }

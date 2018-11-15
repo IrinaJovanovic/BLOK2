@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,18 +13,27 @@ namespace Common
         private WindowsIdentity identity;
         private Dictionary<string, string[]> roles = new Dictionary<string, string[]>();//uloge sa permisijama se spajaju
 
-        public CustomPrincipal(string group)
+        public CustomPrincipal(WindowsIdentity winIdentity)//ovde je problem negde
         {
             /// define list of roles based on custom roles 			 
             string[] rolesTypes = Enum.GetNames(typeof(Role));
-
-            foreach (string role in rolesTypes)
+            foreach (IdentityReference group in winIdentity.Groups)
             {
-                if (role.Equals(group))
+                SecurityIdentifier sid = (SecurityIdentifier)group.Translate(typeof(SecurityIdentifier));
+                var name = sid.Translate(typeof(NTAccount));
+                string groupName = Formatter.ParseName(name.ToString());
+
+                
+            foreach (string g in Enum.GetNames(typeof(Role)))
                 {
-                    if (!roles.ContainsKey(role))
+                    if (g.ToString().Equals(groupName))
                     {
-                        roles.Add(group, RolesConfig.GetPermissions(group));
+                        if (!roles.ContainsKey(groupName))
+                        {
+                            
+                            roles.Add(groupName,RolesConfig.GetPermissions(g.ToString()));
+                            break;
+                        }
                     }
                 }
             }

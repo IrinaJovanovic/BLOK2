@@ -16,11 +16,11 @@ namespace Common
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void ArchiveConsumation();
+        bool ArchiveConsumation();
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
-        void RemoveConsumation();
+        bool RemoveConsumation();
 
         [OperationContract]
         [FaultContract(typeof(MyException))]
@@ -31,12 +31,19 @@ namespace Common
         bool ModificationConsumer(Consumer consumer);
 
         [OperationContract]
+        [FaultContract(typeof(MyException))]
+        bool CheckIfAlive();
+
+        [OperationContract]
+        [FaultContract(typeof(MyException))]
         double CityConsumtion(string city);
 
         [OperationContract]
+        [FaultContract(typeof(MyException))]
         double RegionConsumtion(string region);
 
         [OperationContract]
+        [FaultContract(typeof(MyException))]
         double MaxRegionConsumation(string region);
 
       

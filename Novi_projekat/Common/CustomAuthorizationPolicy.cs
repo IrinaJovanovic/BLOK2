@@ -60,7 +60,7 @@ namespace Common
             lock (locker)
             {
                 IPrincipal principal = null;
-                WindowsIdentity winIdentity = null;
+                WindowsIdentity winIdentity = identity as WindowsIdentity;
 
                 //string idenName = identity.Name;
                 //string[] idenNameSplit = idenName.Split(',');
@@ -69,9 +69,9 @@ namespace Common
                 //string[] ou = idenNameSplit[1].Split('=');
                 //string group = ou[1];
 
-                if (winIdentity != null)
+                if (identity != null)//ovde je bilo !=winIdentity
                 {
-                    principal = new CustomPrincipal(winIdentity.Name);
+                    principal = new CustomPrincipal(winIdentity);
                 }
                 return principal;
             }

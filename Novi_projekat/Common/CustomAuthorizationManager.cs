@@ -18,14 +18,16 @@ namespace Common
 
             if (principal != null)
             {
-                authorized = ((principal as CustomPrincipal).IsInRole(Permissions.Create.ToString())|| 
-                    (principal as CustomPrincipal).IsInRole(Permissions.Deleting.ToString())|| 
-                    (principal as CustomPrincipal).IsInRole(Permissions.Arhiving.ToString())||
-                    (principal as CustomPrincipal).IsInRole(Permissions.Writting.ToString())|| 
-                    (principal as CustomPrincipal).IsInRole(Permissions.Modify.ToString())||
-                     (principal as CustomPrincipal).IsInRole(Permissions.ReadingRegionAvgConsumption.ToString()) ||
-                    (principal as CustomPrincipal).IsInRole(Permissions.ReadingMaxAvgConsumption.ToString()) ||
-                    (principal as CustomPrincipal).IsInRole(Permissions.ReadingCityAvgConsumption.ToString()));
+                //authorized = ((principal as CustomPrincipal).IsInRole(Permissions.Create.ToString())|| 
+                //    (principal as CustomPrincipal).IsInRole(Permissions.Deleting.ToString())|| 
+                //    (principal as CustomPrincipal).IsInRole(Permissions.Arhiving.ToString())||
+                //    (principal as CustomPrincipal).IsInRole(Permissions.Writting.ToString())|| 
+                //    (principal as CustomPrincipal).IsInRole(Permissions.Modify.ToString())||
+                //     (principal as CustomPrincipal).IsInRole(Permissions.ReadingRegionAvgConsumption.ToString()) ||
+                //    (principal as CustomPrincipal).IsInRole(Permissions.ReadingMaxAvgConsumption.ToString()) ||
+                //    (principal as CustomPrincipal).IsInRole(Permissions.ReadingCityAvgConsumption.ToString()));
+                authorized = (((principal as CustomPrincipal).IsInRole(Permissions.Create.ToString())|| ((principal as CustomPrincipal).IsInRole(Role.Reader.ToString()))
+                    || ((principal as CustomPrincipal).IsInRole(Role.Writer.ToString()))));
             }
 
             return authorized;

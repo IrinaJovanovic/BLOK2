@@ -81,11 +81,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Consumer.cs" />
+    <Compile Include="CustomAuditBehavior.cs" />
     <Compile Include="CustomAuthorizationManager.cs" />
     <Compile Include="CustomAuthorizationPolicy.cs" />
     <Compile Include="CustomPrincipal.cs" />
     <Compile Include="EnumRights.cs" />
     <Compile Include="EStateServers.cs" />
+    <Compile Include="Formatter.cs" />
     <Compile Include="IDatabaseManagement.cs" />
     <Compile Include="IStateService.cs" />
     <Compile Include="MyException.cs" />

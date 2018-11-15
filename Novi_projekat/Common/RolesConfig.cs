@@ -29,7 +29,11 @@ namespace Common
         static string[] AdminPermissions = new string[] {  Permissions.Create.ToString(), Permissions.Deleting.ToString(),Permissions.Arhiving.ToString() };
         static string[] WriterPermissions = new string[] {Permissions.Writting.ToString(), Permissions.Modify.ToString() };
         static string[] ReaderPermissions = new string[] {Permissions.ReadingCityAvgConsumption.ToString(), Permissions.ReadingRegionAvgConsumption.ToString(),Permissions.ReadingMaxAvgConsumption.ToString() };
-        static string[] Empty = new string[] { };
+        static string[] listPermissions = new string[] { };
+        static string[] Empty = new string[] { Permissions.Create.ToString(), Permissions.Deleting.ToString(),
+            Permissions.Arhiving.ToString(), Permissions.Writting.ToString(),
+            Permissions.Modify.ToString(), Permissions.ReadingCityAvgConsumption.ToString(),
+            Permissions.ReadingRegionAvgConsumption.ToString(), Permissions.ReadingMaxAvgConsumption.ToString() };
         public static string[] GetPermissions(string role)
         {
             switch (role)

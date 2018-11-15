@@ -1,6 +1,7 @@
 ﻿using Common;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Policy;
 using System.IO;
 using System.ServiceModel;
 using System.Threading;
@@ -15,8 +16,11 @@ namespace Server
 
         static void Main(string[] args)
         {
+            
+
             ReadFileIfExist();
             Host();
+
 
             Thread replicateThread = new Thread(ReplicateThread);
             replicateThread.IsBackground = true;
@@ -30,6 +34,12 @@ namespace Server
             svc = new ServiceHost(typeof(DataBaseManagement));
             svc2 = new ServiceHost(typeof(StateService));
             svc3 = new ServiceHost(typeof(Replicator));
+
+            svc.Authorization.ServiceAuthorizationManager = new CustomAuthorizationManager();
+            List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
+            policies.Add(new CustomAuthorizationPolicy());
+            svc.Authorization.ExternalAuthorizationPolicies = policies.AsReadOnly();
+            svc.Authorization.PrincipalPermissionMode = System.ServiceModel.Description.PrincipalPermissionMode.Custom;
 
             svc.Open();
             svc2.Open();
